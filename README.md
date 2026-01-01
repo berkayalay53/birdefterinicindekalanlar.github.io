@@ -1,1 +1,0 @@
-# birdefterinicindekalanlar.github.io
