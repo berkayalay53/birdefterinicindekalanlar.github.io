@@ -2,10 +2,8 @@
 <html lang="tr">
 <head>
   <meta name="theme-color" content="#0f1113">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<link rel="preload" href="./style.css" as="style">
-<link rel="preload" href="./profile.jpg" as="image">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bir Defterin İçinde Kalanlar — Berkay Alay</title>
@@ -25,8 +23,7 @@
 <body>
 
   <div id="intro-screen">
-    <div class="intro-bg"></div>
-    
+    <div class="intro-bg" style="background-image: url('./cover.jpg');"></div>
     <div class="intro-content">
       <p class="kicker">BERKAY ALAY</p>
       <h1 class="intro-title">Bir Defterin İçinde Kalanlar</h1>
@@ -35,11 +32,10 @@
     </div>
   </div>
 
-  <div class="fixed-bg"></div>
+  <div class="fixed-bg" style="background-image: url('./cover.jpg');"></div>
   <div class="grain"></div>
 
   <main class="page" id="mainPage">
-    
     <header class="hero-spacer"></header>
 
     <section class="quote q-center">
@@ -74,7 +70,6 @@
     <div class="reader-section">
       <h2 class="reader-title">Okuma</h2>
       <p style="color: #bbb; margin-bottom: 20px;">Yalnız okunması önerilir.</p>
-      
       <div class="reader-actions">
         <a href="./bir-defterin-icinde-kalanlar.pdf" target="_blank" class="btn-ghost">PDF'i Aç</a>
         <a href="./bir-defterin-icinde-kalanlar.pdf" download class="btn-ghost">İndir</a>
@@ -84,9 +79,9 @@
     <div class="end-mark">
       <a href="https://berkayalay53.github.io/" class="home-link">← Kütüphaneye Dön</a>
     </div>
-
   </main>
-<div class="music-control" id="music-trigger">
+
+  <div class="music-control" id="music-trigger">
     <div class="disc-wrapper">
       <div class="disc" id="disc">
         <img src="./kralkaybederse.jpg" alt="Müzik Plağı" draggable="false">
@@ -99,28 +94,72 @@
     <source src="./muzik.mp3" type="audio/mpeg">
   </audio>
 
-<script>
-  // === SAYFA YÜKLENME YÖNETİCİSİ ===
-  
-  // 1. Tarayıcı önbelleğinden (Geri butonuyla) geliniyorsa sayfayı yenileme sorunu olmasın
-  window.addEventListener("pageshow", function(event) {
-    if (event.persisted) {
-      document.body.classList.add('loaded');
-      document.body.style.opacity = "1";
-    }
-  });
+  <script>
+    const introScreen = document.getElementById('intro-screen');
+    const startBtn = document.getElementById('start-btn');
+    const mainPage = document.getElementById('mainPage');
+    const music = document.getElementById('bg-music');
+    const disc = document.getElementById('disc');
+    const hint = document.querySelector('.music-hint');
 
-  // 2. Her şey yüklendiğinde (Resimler, CSS) perdeyi aç
-  window.addEventListener('load', () => {
-    document.body.classList.add('loaded'); // CSS'teki .loaded opacity:1 yapar
-    // Eğer toz efekti varsa başlat (Yoksa hata vermez, geçer)
-    if (typeof createDust === "function") createDust(); 
-  });
-  
-  // 3. Güvenlik Sübabı: Eğer 3 saniye içinde yüklenmezse zorla aç (Karanlıkta kalmasınlar)
-  setTimeout(() => {
-    document.body.classList.add('loaded');
-  }, 3000);
-</script>
+    document.body.style.overflow = 'hidden';
+
+    // Giriş ve Müzik Fısıltısı
+    startBtn.addEventListener('click', () => {
+      music.volume = 0;
+      music.play().catch(e => console.log("Müzik engellendi."));
+      
+      let fadeIn = setInterval(() => {
+        if (music.volume < 0.2) {
+          let nextVol = music.volume + 0.01;
+          music.volume = Math.min(nextVol, 0.2);
+        } else {
+          clearInterval(fadeIn);
+        }
+      }, 150);
+
+      disc.classList.add('playing');
+      if(hint) hint.textContent = "Çalıyor...";
+
+      introScreen.classList.add('fade-out');
+      mainPage.classList.add('visible');
+      document.body.style.overflow = 'auto';
+      setTimeout(() => { introScreen.style.display = 'none'; }, 1500);
+    });
+
+    // Alıntıların Belirmesi (Observer)
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.quote').forEach(quote => observer.observe(quote));
+
+    // Manuel Müzik Kontrolü
+    document.getElementById('music-trigger').addEventListener('click', () => {
+      if (music.paused) {
+        music.play();
+        disc.classList.add('playing');
+        hint.textContent = "Çalıyor...";
+      } else {
+        music.pause();
+        disc.classList.remove('playing');
+        hint.textContent = "Duraklatıldı";
+      }
+    });
+
+    // Sayfa Yüklenme Kontrolü
+    window.addEventListener('load', () => {
+      document.body.classList.add('loaded');
+    });
+
+    // Güvenlik Sübabı
+    setTimeout(() => {
+      document.body.classList.add('loaded');
+    }, 3000);
+  </script>
 </body>
 </html>
