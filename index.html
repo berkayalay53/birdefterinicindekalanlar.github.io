@@ -4,6 +4,11 @@
   <meta name="theme-color" content="#0f1113">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+  <!-- Kritik Varlıkların Ön Yüklemesi -->
+  <link rel="preload" href="./style.css" as="style">
+  <link rel="preload" href="./cover.jpg" as="image">
+  <link rel="preload" href="./kralkaybederse.jpg" as="image">
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bir Defterin İçinde Kalanlar — Berkay Alay</title>
@@ -19,9 +24,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="./style.css">
-  <link rel="preload" href="./style.css" as="style">
-  <link rel="preload" href="./cover.jpg" as="image">
-  <link rel="preload" href="./kralkaybederse.jpg" as="image">
 </head>
 <body>
 
@@ -93,7 +95,7 @@
     <span class="music-hint">Melodiyi dinle...</span>
   </div>
 
-  <audio id="bg-music" loop>
+  <audio id="bg-music" loop preload="auto">
     <source src="./muzik.mp3" type="audio/mpeg">
   </audio>
 
@@ -107,26 +109,49 @@
 
     document.body.style.overflow = 'hidden';
 
-    // Giriş ve Müzik Fısıltısı
+    // === EKSİKSİZ VE TAM YÜKLENME DENETİMİ ===
+    function completePageLoad() {
+      if (!document.body.classList.contains('loaded')) {
+        document.body.classList.add('loaded');
+        if (typeof createDust === "function") createDust();
+      }
+    }
+
+    // Tüm varlıklar indiğinde perde açılır
+    window.addEventListener('load', completePageLoad);
+
+    // Geri butonuyla dönüldüğünde belleği korur
+    window.addEventListener('pageshow', (event) => {
+      completePageLoad();
+    });
+
+    // Ağ takılmalarına karşı güvenlik sübabı (4 sn)
+    setTimeout(completePageLoad, 4000);
+
+    // Giriş ve Müzik Başlatma
     startBtn.addEventListener('click', () => {
       music.volume = 0;
       music.play().catch(e => console.log("Müzik engellendi."));
       
       let fadeIn = setInterval(() => {
         if (music.volume < 0.2) {
-          let nextVol = music.volume + 0.01;
-          music.volume = Math.min(nextVol, 0.2);
+          let newVol = music.volume + 0.01;
+          music.volume = Math.min(newVol, 0.2);
         } else {
           clearInterval(fadeIn);
         }
       }, 150);
 
       disc.classList.add('playing');
-      if(hint) hint.textContent = "Çalıyor...";
+      if (hint) hint.textContent = "Çalıyor...";
 
       introScreen.classList.add('fade-out');
       mainPage.classList.add('visible');
+
+      // Sayfa akışını serbest bırak
       document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+
       setTimeout(() => { introScreen.style.display = 'none'; }, 1500);
     });
 
@@ -146,33 +171,13 @@
       if (music.paused) {
         music.play();
         disc.classList.add('playing');
-        hint.textContent = "Çalıyor...";
+        if (hint) hint.textContent = "Çalıyor...";
       } else {
         music.pause();
         disc.classList.remove('playing');
-        hint.textContent = "Duraklatıldı";
+        if (hint) hint.textContent = "Duraklatıldı";
       }
     });
-
-// === SAYFA YÜKLENME VE PERDE YÖNETİCİSİ ===
-
-// 1. Geri butonuyla (tarayıcı önbelleğinden) gelindiğinde kilitlenmeyi önler
-window.addEventListener("pageshow", function(event) {
-  if (event.persisted) {
-    document.body.classList.add('loaded');
-    document.body.style.opacity = "1";
-  }
-});
-
-// 2. Kapak görseli ve tüm kaynaklar hazır olduğunda perdeyi açar
-window.addEventListener('load', () => {
-  document.body.classList.add('loaded');
-});
-
-// 3. Güvenlik Sübabı: Bağlantı yavaşsa kullanıcı karanlıkta kalmasın
-setTimeout(() => {
-  document.body.classList.add('loaded');
-}, 2500);
   </script>
 </body>
 </html>
